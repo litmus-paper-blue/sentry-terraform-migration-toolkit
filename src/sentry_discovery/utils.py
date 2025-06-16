@@ -37,12 +37,12 @@ def validate_token(token: str) -> bool:
     if not token:
         return False
     
-    # Sentry tokens are typically 64 character hex strings
-    # or can be in the format of "sntrys_..." for newer tokens
-    if len(token) == 64 and re.match(r'^[a-f0-9]+$', token):
-        return True
-    
-    if token.startswith('sntrys_') and len(token) > 20:
+    # Accept any reasonable token format
+    # Sentry tokens can be:
+    # - 64 character hex strings
+    # - sntrys_... format
+    # - Custom formats for self-hosted instances
+    if len(token) >= 32:  # Minimum reasonable token length
         return True
     
     return False

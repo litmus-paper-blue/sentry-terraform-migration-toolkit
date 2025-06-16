@@ -1,6 +1,6 @@
-# Sentry Terraform Discovery Tool
+# Sentry Terraform Migration Toolkit
 
-A Python tool to discover existing Sentry resources and generate Terraform configurations for infrastructure-as-code migration.
+A powerful Python toolkit that transforms your manually-managed Sentry setup into Infrastructure as Code. 
 
 ## 🎯 Purpose
 

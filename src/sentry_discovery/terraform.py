@@ -235,7 +235,7 @@ class TerraformGenerator:
                 'id': project['id'],
                 'slug': project['slug'],
                 'name': project['name'],
-                'platform': project.get('platform', 'other'),
+                'platform': project.get('platform', 'other'),  # Use platform as-is
                 'resource_name': safe_resource_name(project['slug']),
                 'teams': []
             }
@@ -328,7 +328,7 @@ class TerraformGenerator:
                     'command': f"terraform import sentry_team_member.{member_resource} {org_slug}/{team['slug']}/{member['email']}"
                 })
         
-        # Project imports
+        # Project imports - using same format as teams with org_slug
         for project in data['projects']:
             import_commands.append({
                 'description': f"project {project['slug']}",

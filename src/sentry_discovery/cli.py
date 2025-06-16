@@ -125,15 +125,25 @@ def main(
     # Load configuration
     config = load_config(config_file) if config_file else Config()
     
-    # Override config with CLI options
+    # Override config with CLI options and interactive prompts
     if token:
         config.sentry.token = token
     if base_url != "https://sentry.io/api/0":
         config.sentry.base_url = base_url
     if org:
         config.sentry.organization = org
+    
+    # Interactive output directory handling
     if output_dir != "./terraform":
         config.terraform.output_dir = output_dir
+    else:
+        # Check for version changes and prompt for directory
+        version_changed = detect_version_changes(config.terraform.output_dir)
+        if version_changed:
+            config.terraform.output_dir = get_output_directory(config.terraform.output_dir)
+        else:
+            config.terraform.output_dir = get_output_directory(config.terraform.output_dir)
+    
     if template_dir:
         config.terraform.template_dir = template_dir
     if output_format != "hcl":
@@ -221,7 +231,110 @@ def main(
             console.print_exception()
         sys.exit(1)
 
+def get_output_directory(default_dir: str) -> str:
+    """Get output directory with interactive prompts for conflicts"""
+    import sys
+    from datetime import datetime
+    from pathlib import Path
+    
+    while True:
+        if sys.stdin.isatty():  # Interactive terminal
+            output_dir = input(f"Enter output directory (default: {default_dir}): ").strip()
+            if not output_dir:
+                output_dir = default_dir
+        else:
+            # Non-interactive mode
+            output_dir = default_dir
+        
+        output_path = Path(output_dir)
+        
+        if output_path.exists() and any(output_path.iterdir()):
+            if sys.stdin.isatty():
+                print(f"\n⚠️  Directory '{output_dir}' already exists and is not empty!")
+                print(f"Contents: {len(list(output_path.iterdir()))} files/folders")
+                choice = input("Choose action: (r)eplace, (m)erge, (n)ew directory, (a)bort: ").lower().strip()
+                
+                if choice in ['r', 'replace']:
+                    # Create backup of existing directory
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_dir = Path(f"{output_dir}_backup_{timestamp}")
+                    output_path.rename(backup_dir)
+                    print(f"📁 Backup created: {backup_dir}")
+                    return output_dir
+                elif choice in ['m', 'merge']:
+                    print(f"📁 Merging into existing directory: {output_dir}")
+                    return output_dir
+                elif choice in ['n', 'new', 'new directory']:
+                    continue  # Ask for new directory name
+                else:  # abort
+                    print("❌ Operation aborted")
+                    sys.exit(1)
+            else:
+                # Non-interactive mode, auto-rename with timestamp
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                output_dir = f"{default_dir}_{timestamp}"
+                print(f"📁 Auto-renamed to: {output_dir}")
+                return output_dir
+        else:
+            return output_dir
+
 def show_config(config: Config):
+    """Display current configuration"""
+    table = Table(title="Configuration")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("Base URL", config.sentry.base_url)
+    table.add_row("Organization", config.sentry.organization or "Auto-detect")
+    table.add_row("Output Directory", config.terraform.output_dir)
+    table.add_row("Output Format", config.output.format)
+    table.add_row("Module Style", "Yes" if config.terraform.module_style else "No")
+    table.add_row("Dry Run", "Yes" if config.output.dry_run else "No")
+    
+    console.print(table)
+    console.print()
+
+def detect_version_changes(output_dir: str) -> bool:
+    """Detect if this is a new version of discovery data"""
+    import json
+    from pathlib import Path
+    from datetime import datetime
+    
+    metadata_file = Path(output_dir) / ".sentry-discovery-metadata.json"
+    
+    current_metadata = {
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",  # Tool version
+        "discovery_id": datetime.now().strftime("%Y%m%d_%H%M%S")
+    }
+    
+    if metadata_file.exists():
+        try:
+            with open(metadata_file, 'r') as f:
+                previous_metadata = json.load(f)
+            
+            # Check if significant time has passed (new discovery session)
+            from datetime import datetime, timedelta
+            prev_time = datetime.fromisoformat(previous_metadata["timestamp"])
+            current_time = datetime.now()
+            
+            if current_time - prev_time > timedelta(hours=1):
+                print(f"🔄 New discovery session detected")
+                print(f"   Previous: {prev_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"   Current:  {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                return True
+        except Exception as e:
+            print(f"⚠️  Could not read previous metadata: {e}")
+    
+    # Save current metadata
+    try:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        with open(metadata_file, 'w') as f:
+            json.dump(current_metadata, f, indent=2)
+    except Exception as e:
+        print(f"⚠️  Could not save metadata: {e}")
+    
+    return False
     """Display current configuration"""
     table = Table(title="Configuration")
     table.add_column("Setting", style="cyan")

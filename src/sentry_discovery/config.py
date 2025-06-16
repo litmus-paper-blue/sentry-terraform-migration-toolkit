@@ -21,6 +21,7 @@ class SentryConfig:
     organization: Optional[str] = None
     timeout: int = 30
     retry_attempts: int = 3
+    is_self_hosted: bool = False  # New flag for self-hosted instances
     
     def __post_init__(self):
         # Load from environment if not set
@@ -30,6 +31,10 @@ class SentryConfig:
             self.base_url = os.getenv("SENTRY_BASE_URL", self.base_url)
         if not self.organization:
             self.organization = os.getenv("SENTRY_ORG")
+        
+        # Auto-detect self-hosted if not using sentry.io
+        if "sentry.io" not in self.base_url:
+            self.is_self_hosted = True
 
 @dataclass
 class TerraformConfig:
@@ -38,7 +43,7 @@ class TerraformConfig:
     module_style: bool = False
     import_script: bool = True
     terraform_version: str = ">=1.0"
-    provider_version: str = "~> 0.12.0"
+    provider_version: str = "~> 0.14.0"
     template_dir: Optional[str] = None
     
     # Resource naming

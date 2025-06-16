@@ -13,16 +13,11 @@ __description__ = "Discover Sentry resources and generate Terraform configuratio
 
 from .discovery import SentryDiscovery, SentryAPIError
 from .config import Config, load_config, save_config
-from .utils import (
-    safe_resource_name,
-    safe_filename,
-    validate_token,
-    setup_logging
-)
+from .utils import safe_resource_name, safe_filename, validate_token, setup_logging
 
 __all__ = [
     "SentryDiscovery",
-    "SentryAPIError", 
+    "SentryAPIError",
     "Config",
     "load_config",
     "save_config",
