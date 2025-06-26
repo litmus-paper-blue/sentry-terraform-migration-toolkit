@@ -114,61 +114,57 @@ def main(
 ):
     """
     Sentry Terraform Discovery Tool
-    
     Discover existing Sentry resources and generate Terraform configurations
     for infrastructure-as-code migration.
     """
-    
-    # Setup logging
     setup_logging(verbose)
+
+    # 1. Load config file if present, else use defaults
+    config = load_config(config_file) if config_file else load_config()
+    print("DEBUG: Loaded token from config:", config.sentry.token)
+
+    # 2. Only override config values if CLI options are explicitly set (not just their default)
+    # Use Click's 'ctx.get_parameter_source' to check if a value was set by the user
+    import click
+    ctx = click.get_current_context()
     
-    # Load configuration
-    config = load_config(config_file) if config_file else Config()
-    
-    # Override config with CLI options and interactive prompts
-    if token:
+    if ctx.get_parameter_source('token').name == 'COMMANDLINE':
         config.sentry.token = token
-    if base_url != "https://sentry.io/api/0":
+    if ctx.get_parameter_source('base_url').name == 'COMMANDLINE':
         config.sentry.base_url = base_url
-    if org:
+    if ctx.get_parameter_source('org').name == 'COMMANDLINE':
         config.sentry.organization = org
-    
-    # Interactive output directory handling
-    if output_dir != "./terraform":
+    if ctx.get_parameter_source('output_dir').name == 'COMMANDLINE':
         config.terraform.output_dir = output_dir
-    else:
-        # Check for version changes and prompt for directory
-        version_changed = detect_version_changes(config.terraform.output_dir)
-        if version_changed:
-            config.terraform.output_dir = get_output_directory(config.terraform.output_dir)
-        else:
-            config.terraform.output_dir = get_output_directory(config.terraform.output_dir)
-    
-    if template_dir:
+    if ctx.get_parameter_source('template_dir').name == 'COMMANDLINE':
         config.terraform.template_dir = template_dir
-    if output_format != "hcl":
+    if ctx.get_parameter_source('output_format').name == 'COMMANDLINE':
         config.output.format = output_format
-    if module_style:
-        config.terraform.module_style = True
-    if dry_run:
-        config.output.dry_run = True
-    
-    # Validate required parameters
+    if ctx.get_parameter_source('module_style').name == 'COMMANDLINE':
+        config.terraform.module_style = module_style
+    if ctx.get_parameter_source('dry_run').name == 'COMMANDLINE':
+        config.output.dry_run = dry_run
+
+    # 3. Only prompt for output-dir if it exists and is not empty
+    from pathlib import Path
+    output_path = Path(config.terraform.output_dir)
+    if output_path.exists() and any(output_path.iterdir()):
+        config.terraform.output_dir = get_output_directory(str(output_path))
+
+    # 4. Validate required parameters (prompt only if missing)
     if not config.sentry.token:
         if not sys.stdin.isatty():
             console.print("❌ [red]Auth token is required. Set SENTRY_AUTH_TOKEN or use --token[/red]")
             sys.exit(1)
         config.sentry.token = click.prompt("Enter your Sentry Auth Token", hide_input=True)
-    
-    # Validate token format
+
     if not validate_token(config.sentry.token):
         console.print("❌ [red]Invalid token format[/red]")
         sys.exit(1)
-    
-    # Show configuration
+
     if verbose:
         show_config(config)
-    
+
     try:
         # Initialize discovery
         discovery = SentryDiscovery(
