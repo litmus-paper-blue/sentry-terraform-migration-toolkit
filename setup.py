@@ -26,9 +26,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/litmus-paper-blue/sentry-terraform-discovery",
     project_urls={
-        "Bug Reports": "https://github.com/litmus-paper-blue/sentry-terraform-discovery/issues",
-        "Source": "https://github.com/litmus-paper-blue/sentry-terraform-discovery",
-        "Documentation": "https://github.com/litmus-paper-blue/sentry-terraform-discovery/blob/main/docs/",
+        "Bug Reports": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkitissues",
+        "Source": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit",
+        "Documentation": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit/blob/main/docs/",
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},

@@ -1,6 +1,6 @@
 # Sentry Terraform Migration Toolkit
 
-A powerful Python toolkit that transforms your manually-managed Sentry setup into Infrastructure as Code. 
+A powerful Python toolkit that transforms your manually-managed Sentry setup into Infrastructure as Code.
 
 ## 🎯 Purpose
 
@@ -51,7 +51,6 @@ sentry-terraform-discovery/
 │   └── validate_imports.sh
 └── templates/                  # Terraform templates
     ├── project.tf.j2
-    ├── team.tf.j2
     └── variables.tf.j2
 ```
 
@@ -71,13 +70,19 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+Or use the Makefile for development:
+
+```bash
+make install-dev
+```
+
 ### Basic Usage
 
 ```bash
-# Interactive mode
+# Interactive mode (uses config file if present)
 sentry-discovery
 
-# Direct command
+# Direct command (overrides config file values)
 sentry-discovery --token YOUR_TOKEN --org your-org-slug
 
 # Generate only specific resources
@@ -89,217 +94,55 @@ sentry-discovery --token YOUR_TOKEN --template-dir ./custom-templates
 
 ### Configuration File
 
-Create `~/.sentry-discovery.yaml`:
+Create `.sentry-discovery.yaml` in your project root (or home directory):
 
 ```yaml
 sentry:
-  base_url: "https://sentry.io/api/0"
-  token: "your-token-here"  # Can also use env var SENTRY_AUTH_TOKEN
+  base_url: "https://sentry.io/api/0"  # Or your self-hosted Sentry base URL
+  token: "your-token-here"  # Required, or set SENTRY_AUTH_TOKEN env var
   organization: "your-default-org"
 
 terraform:
   output_dir: "./terraform"
-  module_style: true  # Generate modules vs flat files
   import_script: true
-
-output:
-  format: "hcl"  # hcl, json, yaml
-  include_comments: true
-  terraform_version: ">=1.0"
 ```
 
-## 📖 Detailed Usage
+- The `token` field is **required** in the config file, or you must set the `SENTRY_AUTH_TOKEN` environment variable.
+- The config file is loaded first; CLI options only override if explicitly set.
+- You will only be prompted if the output directory already exists and would be overwritten.
 
-### Command Line Options
+### Docker Usage
+
+You can run the tool in Docker, mounting your config and output directories:
 
 ```bash
-sentry-discovery [OPTIONS]
-
-Options:
-  --token TEXT              Sentry auth token (or set SENTRY_AUTH_TOKEN)
-  --base-url TEXT          Sentry base URL [default: https://sentry.io/api/0]
-  --org TEXT               Organization slug
-  --output-dir TEXT        Output directory [default: ./terraform]
-  --config-file TEXT       Configuration file path
-  --projects-only          Discover projects only
-  --teams-only            Discover teams only
-  --dry-run               Show what would be generated without writing files
-  --template-dir TEXT     Custom template directory
-  --format [hcl|json]     Output format [default: hcl]
-  --verbose              Enable verbose logging
-  --help                 Show this message and exit
+docker run --rm -it \
+  -v $(pwd)/.sentry-discovery.yaml:/app/.sentry-discovery.yaml \
+  -v $(pwd)/terraform:/app/terraform \
+  -e SENTRY_AUTH_TOKEN \
+  sentry-terraform-discovery:latest
 ```
 
-### Environment Variables
+### Output
 
-```bash
-export SENTRY_AUTH_TOKEN="your-token-here"
-export SENTRY_BASE_URL="https://your-sentry.example.com/api/0"
-export SENTRY_ORG="default-org"
-```
+The tool generates:
+- `terraform/main.tf`          (Provider configuration)
+- `terraform/variables.tf`     (Variable definitions)
+- `terraform/teams.tf`         (Team resources)
+- `terraform/projects.tf`      (Project resources)
+- `terraform/imports.sh`       (Import script)
 
-## 🔧 Advanced Features
+### Configuration Precedence
 
-### Custom Templates
+- The tool loads `.sentry-discovery.yaml` first.
+- CLI options only override config file values if explicitly set.
+- Prompts only occur for output directory conflicts.
 
-The tool uses Jinja2 templates for generating Terraform configurations. You can customize the output by providing your own templates:
+### Troubleshooting
 
-```bash
-sentry-discovery --template-dir ./my-templates
-```
-
-Template variables available:
-- `organization`: Organization data
-- `projects`: List of projects
-- `teams`: List of teams
-- `members`: List of team members
-
-### Module Generation
-
-Generate reusable Terraform modules:
-
-```bash
-sentry-discovery --module-style
-```
-
-This creates:
-```
-terraform/
-├── modules/
-│   ├── sentry-project/
-│   ├── sentry-team/
-│   └── sentry-member/
-└── environments/
-    └── production/
-        └── main.tf
-```
-
-### Validation
-
-Validate your existing Terraform state against Sentry:
-
-```bash
-sentry-discovery --validate --terraform-dir ./existing-terraform
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=src/sentry_discovery
-
-# Run specific test
-pytest tests/test_discovery.py::TestSentryAPI::test_get_projects
-```
-
-## 📊 Output Examples
-
-### Generated Files
-
-- `terraform/main.tf` - Main Terraform configuration
-- `terraform/variables.tf` - Variable definitions
-- `terraform/outputs.tf` - Output values
-- `terraform/imports.sh` - Import script
-- `terraform/README.md` - Usage instructions
-
-### Sample Output Structure
-
-```hcl
-# Generated Terraform configuration
-resource "sentry_team" "backend_team" {
-  organization = var.sentry_org_slug
-  name         = "Backend Team"
-  slug         = "backend-team"
-}
-
-resource "sentry_project" "api_service" {
-  organization = var.sentry_org_slug
-  name         = "API Service"
-  slug         = "api-service"
-  platform     = "python"
-  teams        = [sentry_team.backend_team.id]
-}
-```
-
-## 🔒 Security Considerations
-
-- Never commit auth tokens to version control
-- Use environment variables or secure secret management
-- Rotate tokens regularly
-- Use minimal required permissions
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/yourusername/sentry-terraform-discovery.git
-
-# Install in development mode
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run tests
-pytest
-```
-
-## 📝 Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for version history.
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Authentication Error**
-```
-Error: 401 Unauthorized
-```
-- Verify your auth token is correct and has proper permissions
-- Check if token has expired
-
-**Organization Not Found**
-```
-Error: Organization 'my-org' not found
-```
-- Verify organization slug is correct
-- Ensure your token has access to the organization
-
-**Import Failures**
-```
-Error: Resource already exists
-```
-- Check if resources are already managed by Terraform
-- Use `terraform import` with `--force` flag if needed
-
-### Debug Mode
-
-```bash
-sentry-discovery --verbose --dry-run
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Sentry](https://sentry.io/) for the excellent error tracking platform
-- [Terraform Sentry Provider](https://github.com/jianyuan/terraform-provider-sentry) by @jianyuan
-- Community contributors and feedback
-
----
+- **Token Issues:** Ensure your token is present in the config file or as `SENTRY_AUTH_TOKEN`. The token must be valid for your Sentry instance (self-hosted or SaaS).
+- **Base URL:** For self-hosted Sentry, set the correct `base_url` (e.g., `https://your-sentry-instance/api/0`).
+- **Import Errors:** Check that your organization slug and resource slugs are correct. The tool now generates import commands using the correct `org_slug/project_slug` format.
+- **Makefile:** Use `make` commands for development, testing, and linting (see `Makefile`).
 
 **Need help?** Open an issue or start a discussion!

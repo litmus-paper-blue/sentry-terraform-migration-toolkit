@@ -14,7 +14,7 @@ The Sentry Terraform Discovery tool helps you:
 
 - Python 3.8 or higher
 - Terraform installed
-- Sentry auth token
+- Sentry auth token (see below for config)
 - Git (for version control)
 
 ## Step-by-Step Guide
@@ -32,29 +32,31 @@ make install-dev
 
 ### 2. Configuration
 
-Create a `.sentry-discovery.yaml` file in your project root:
+Create a `.sentry-discovery.yaml` file in your project root **(required)**:
 
 ```yaml
 sentry:
   base_url: "https://your-sentry-instance/api/0"  # For self-hosted Sentry
-  token: "${SENTRY_AUTH_TOKEN}"  # Use environment variable for security
+  token: "your-token-here"  # Required, or set SENTRY_AUTH_TOKEN env var
   organization: "your-org-slug"
 
 terraform:
   output_dir: "./terraform"
-  module_style: true  # Generate modules vs flat files
   import_script: true
 
 output:
   format: "hcl"  # hcl, json, yaml
-  include_comments: true
   terraform_version: ">=1.0"
 ```
 
-### 3. Set Environment Variables
+- The `token` field is **required** in the config file, or you must set the `SENTRY_AUTH_TOKEN` environment variable.
+- The config file is loaded first; CLI options only override if explicitly set.
+- You will only be prompted if the output directory already exists and would be overwritten.
+
+### 3. Set Environment Variables (Optional)
 
 ```bash
-# Set your Sentry auth token
+# Set your Sentry auth token (if not in config file)
 export SENTRY_AUTH_TOKEN="your-token-here"
 ```
 
@@ -64,15 +66,30 @@ export SENTRY_AUTH_TOKEN="your-token-here"
 # Run the discovery tool with verbose output
 sentry-discovery --verbose
 
-# This will create:
-# - terraform/main.tf          (Provider configuration)
-# - terraform/variables.tf     (Variable definitions)
-# - terraform/teams.tf         (Team resources)
-# - terraform/projects.tf      (Project resources)
-# - terraform/imports.sh       (Import script)
+# You can also override config values via CLI:
+sentry-discovery --token YOUR_TOKEN --org your-org-slug
 ```
 
-### 5. Review Generated Files
+- The tool will generate:
+  - `terraform/main.tf`          (Provider configuration)
+  - `terraform/variables.tf`     (Variable definitions)
+  - `terraform/teams.tf`         (Team resources)
+  - `terraform/projects.tf`      (Project resources)
+  - `terraform/imports.sh`       (Import script)
+
+### 5. Docker Usage
+
+You can run the tool in Docker, mounting your config and output directories:
+
+```bash
+docker run --rm -it \
+  -v $(pwd)/.sentry-discovery.yaml:/app/.sentry-discovery.yaml \
+  -v $(pwd)/terraform:/app/terraform \
+  -e SENTRY_AUTH_TOKEN \
+  sentry-terraform-discovery:latest
+```
+
+### 6. Review Generated Files
 
 1. **main.tf**: Contains provider configuration
 2. **variables.tf**: Defines required variables
@@ -80,127 +97,47 @@ sentry-discovery --verbose
 4. **projects.tf**: Sentry project resources
 5. **imports.sh**: Import script for existing resources
 
-### 6. Initialize Terraform
+### 7. Initialize Terraform
 
 ```bash
 cd terraform
 terraform init
 ```
 
-### 7. Import Existing Resources
+### 8. Import Existing Resources
 
 ```bash
-# Make the import script executable
 chmod +x imports.sh
-
-# Run the import script
 ./imports.sh
 ```
 
-### 8. Verify Imports
+### 9. Verify Imports
 
 ```bash
-# Check that everything imported correctly
 terraform plan
 ```
 
 You should see "No changes. Your infrastructure matches the configuration."
 
-### 9. Start Managing with Terraform
-
-From this point on, you can use Terraform to manage your Sentry resources:
+### 10. Start Managing with Terraform
 
 ```bash
-# Make changes through Terraform
 terraform plan    # Preview changes
 terraform apply   # Apply changes
 ```
 
-## Common Issues and Solutions
+## Configuration Precedence
 
-### 1. Authentication Issues
-- Ensure your token has sufficient permissions
-- For self-hosted Sentry, verify the base URL is correct
-- Check that the token format is correct (no spaces or prefixes)
+- The tool loads `.sentry-discovery.yaml` first.
+- CLI options only override config file values if explicitly set.
+- Prompts only occur for output directory conflicts.
 
-### 2. Import Errors
-- Verify organization slug is correct
-- Ensure resources exist in Sentry
-- Check import ID format (should be `organization/resource-slug`)
+## Troubleshooting
 
-### 3. Base URL Format
-- Self-hosted Sentry: `https://your-sentry-instance`
-- Cloud Sentry: `https://sentry.io`
-- Don't include `/api/0` in base URL (provider adds this automatically)
+- **Token Issues:** Ensure your token is present in the config file or as `SENTRY_AUTH_TOKEN`. The token must be valid for your Sentry instance (self-hosted or SaaS).
+- **Base URL:** For self-hosted Sentry, set the correct `base_url` (e.g., `https://your-sentry-instance/api/0`).
+- **Import Errors:** Check that your organization slug and resource slugs are correct. The tool now generates import commands using the correct `org_slug/project_slug` format.
+- **Makefile:** Use `make` commands for development, testing, and linting (see `Makefile`).
 
-## Best Practices
-
-1. **Version Control**
-   - Commit generated Terraform files to Git
-   - Exclude sensitive files (terraform.tfstate, .sentry-discovery.yaml)
-
-2. **Security**
-   - Use environment variables for sensitive values
-   - Don't commit tokens to version control
-   - Use separate tokens for different environments
-
-3. **Organization**
-   - Use consistent naming for resources
-   - Group related resources together
-   - Use descriptive comments
-
-4. **Workflow**
-   - Always review generated configurations
-   - Test imports in a non-production environment first
-   - Use `terraform plan` before applying changes
-
-## Maintenance
-
-After initial import:
-1. Use Terraform for all Sentry changes
-2. Keep configurations in version control
-3. Use CI/CD for automated deployments
-4. Regularly update provider and Terraform versions
-
-## Reference
-
-### Command Line Options
-```bash
-sentry-discovery [OPTIONS]
-
-Options:
-  --token TEXT              Sentry auth token
-  --base-url TEXT          Sentry base URL
-  --org TEXT               Organization slug
-  --output-dir TEXT        Output directory
-  --config-file TEXT       Config file path
-  --projects-only          Only discover projects
-  --teams-only            Only discover teams
-  --dry-run               Show what would be generated
-  --verbose              Enable verbose logging
-```
-
-### Resource Types
-- Teams
-- Projects
-- Team Members
-- Project Settings
-
-### File Structure
-```
-terraform/
-├── main.tf           # Provider configuration
-├── variables.tf      # Variable definitions
-├── teams.tf         # Team resources
-├── projects.tf      # Project resources
-└── imports.sh       # Import script
-```
-
-## Support
-
-If you encounter issues:
-1. Check the troubleshooting section above
-2. Enable verbose logging with `--verbose`
-3. Review error messages carefully
-4. Check Sentry API documentation
-5. Open an issue in the repository
+## Need help?
+Open an issue or start a discussion!
