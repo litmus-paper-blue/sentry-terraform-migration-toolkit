@@ -141,6 +141,7 @@ class Config:
             sentry_data = data['sentry']
             config.sentry.base_url = sentry_data.get('base_url', config.sentry.base_url)
             config.sentry.organization = sentry_data.get('organization', config.sentry.organization)
+            config.sentry.token = sentry_data.get('token', config.sentry.token)
             config.sentry.timeout = sentry_data.get('timeout', config.sentry.timeout)
             config.sentry.retry_attempts = sentry_data.get('retry_attempts', config.sentry.retry_attempts)
         
