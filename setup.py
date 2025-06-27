@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup configuration for sentry-terraform-discovery
+Setup configuration for sentry-terraform-migration-toolkit
 """
 
 from setuptools import setup, find_packages
@@ -18,17 +18,17 @@ def read_requirements():
 
 setup(
     name="sentry-terraform-discovery",
-    version="1.0.0",
-    author="Your Name",
-    author_email="your.email@company.com",
+    version="1.0.1",
+    author="Ogonna Nnamani",
+    author_email="ogonna.devops@gmail.com",
     description="Discover Sentry resources and generate Terraform configurations",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/sentry-terraform-discovery",
+    url="https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/sentry-terraform-discovery/issues",
-        "Source": "https://github.com/yourusername/sentry-terraform-discovery",
-        "Documentation": "https://github.com/yourusername/sentry-terraform-discovery/blob/main/docs/",
+        "Bug Reports": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit/issues",
+        "Source": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit",
+        "Documentation": "https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit/blob/main/docs/",
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
