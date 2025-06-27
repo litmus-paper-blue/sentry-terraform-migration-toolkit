@@ -60,8 +60,8 @@ sentry-terraform-discovery/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/sentry-terraform-discovery.git
-cd sentry-terraform-discovery
+git clone https://github.com/litmus-paper-blue/sentry-terraform-discovery-toolkit.git
+cd sentry-terraform-discovery-toolkit
 
 # Install dependencies
 pip install -r requirements.txt
