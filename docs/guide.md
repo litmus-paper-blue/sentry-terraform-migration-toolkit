@@ -23,7 +23,7 @@ The Sentry Terraform Discovery tool helps you:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit.git
 cd sentry-instance-discovery-tool
 
 # Install the tool
