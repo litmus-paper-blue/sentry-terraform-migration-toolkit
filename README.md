@@ -25,9 +25,7 @@ This tool helps you migrate from manually managed Sentry projects, teams, and me
 ├── Dockerfile
 ├── get-pip.py
 ├── article-img.jpeg
-├── .env
 ├── .gitignore
-├── .sentry-discovery.yaml
 ├── docs/
 │   └── guide.md
 ├── src/
