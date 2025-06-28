@@ -1,8 +1,8 @@
 # Sentry Terraform Migration Toolkit
 
-![Image](article-img.jpeg)
-
 A powerful Python toolkit that transforms your manually-managed Sentry setup into Infrastructure as Code.
+
+![Toolkit Banner](article-img.jpeg)
 
 ## 🎯 Purpose
 
@@ -16,44 +16,32 @@ This tool helps you migrate from manually managed Sentry projects, teams, and me
 ## 📁 Repository Structure
 
 ```
-sentry-terraform-discovery/
-├── README.md                    # This file
-├── LICENSE                     # MIT License
-├── requirements.txt            # Python dependencies
-├── setup.py                    # Package setup
-├── .gitignore                  # Git ignore patterns
-├── .github/                    # GitHub workflows
-│   └── workflows/
-│       └── ci.yml              # CI/CD pipeline
-├── src/                        # Source code
+.
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── setup.py
+├── Makefile
+├── Dockerfile
+├── get-pip.py
+├── article-img.jpeg
+├── .env
+├── .gitignore
+├── .sentry-discovery.yaml
+├── docs/
+│   └── guide.md
+├── src/
 │   └── sentry_discovery/
 │       ├── __init__.py
-│       ├── cli.py              # CLI interface
-│       ├── discovery.py        # Main discovery logic
-│       ├── terraform.py        # Terraform generation
-│       ├── config.py           # Configuration management
-│       └── utils.py            # Utility functions
-├── tests/                      # Test suite
-│   ├── __init__.py
-│   ├── test_discovery.py
-│   ├── test_terraform.py
-│   └── fixtures/               # Test data
-│       └── sample_responses.json
-├── examples/                   # Example configurations
-│   ├── basic_usage.py
-│   ├── custom_templates/
-│   └── sample_outputs/
-├── docs/                       # Documentation
-│   ├── installation.md
-│   ├── usage.md
-│   ├── configuration.md
-│   └── troubleshooting.md
-├── scripts/                    # Utility scripts
-│   ├── install.sh
-│   └── validate_imports.sh
-└── templates/                  # Terraform templates
-    ├── project.tf.j2
-    └── variables.tf.j2
+│       ├── cli.py
+│       ├── config.py
+│       ├── discovery.py
+│       ├── terraform.py
+│       └── utils.py
+├── terraform/
+└── .github/
+    └── workflows/
+        └── ci.yml
 ```
 
 ## 🚀 Quick Start
