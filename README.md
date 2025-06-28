@@ -1,5 +1,7 @@
 # Sentry Terraform Migration Toolkit
 
+![Image](article-img.jpeg)
+
 A powerful Python toolkit that transforms your manually-managed Sentry setup into Infrastructure as Code.
 
 ## 🎯 Purpose
