@@ -55,5 +55,5 @@ CMD ["--help"]
 # Labels
 LABEL maintainer="ogonnannamani11@gmail.com" \
       description="Sentry Terraform Discovery Tool" \
-      version="1.0.0" \
+      version="1.0.1" \
       org.opencontainers.image.source="https://github.com/litmus-paper-blue/sentry-terraform-migration-toolkit"
